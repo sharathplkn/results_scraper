@@ -1,0 +1,7 @@
+<h2>Fetched Results</h2>
+<a href="{% url 'upload_csv' %}">← Upload Another File</a>
+<ul>
+  {% for result in results %}
+    <li>{{ result }}</li>
+  {% endfor %}
+</ul>

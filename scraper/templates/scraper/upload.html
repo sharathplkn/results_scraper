@@ -1,0 +1,8 @@
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <label>Select CSV file:</label>
+  <input type="file" name="csv_file" required>
+  <label>Provide Link</label>
+  <input type="url" name="download_link" required>
+  <button type="submit">Submit</button>
+</form>
