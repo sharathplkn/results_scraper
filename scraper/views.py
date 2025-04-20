@@ -1,6 +1,7 @@
 import os
 import csv
 import time
+import glob
 import zipfile
 import requests
 from django.shortcuts import render
@@ -46,34 +47,27 @@ def upload_csv(request):
 
                     driver.get(download_link)
 
-                    wait = WebDriverWait(driver, 1)
+                    wait = WebDriverWait(driver, 0.1)
                     wait.until(EC.presence_of_element_located((By.ID, "regno"))).send_keys(regno)
                     driver.find_element(By.NAME, "dob").send_keys(dob)
-
+                    print("1")
                     
 
                     driver.find_element(By.XPATH, "//input[@type='button']").click()
-
-                    # Wait for the download link to appear
-                    wait.until(EC.presence_of_element_located((By.LINK_TEXT, "Download Result")))
-                    link = driver.find_element(By.LINK_TEXT, "Download Result")
-                    download_url = link.get_attribute("href")  # Get the download URL
-
-                    # Make a request to download the file without prompts
-                    pdf_response = requests.get(download_url, stream=True)
-                    if pdf_response.status_code == 200:
-                        pdf_path = os.path.join(download_dir, f"{regno}.pdf")  # This ensures the filename matches the register number
-                        with open(pdf_path, 'wb') as f:
-                            for chunk in pdf_response.iter_content(chunk_size=1024):
-                                if chunk:
-                                    f.write(chunk)
-
+                    latest_file = max(glob.glob(os.path.join(download_dir, "*.pdf")), key=os.path.getctime, default=None)
+                    if latest_file:
+                        new_path = os.path.join(download_dir, f"{regno}.pdf")
+                        os.rename(latest_file, new_path)
+                        print(f"Downloaded and renamed to {regno}.pdf")
+                    else:
+                        print(f"Download failed or missing for {regno}")
                 except Exception as e:
-                    print(f"Error for {row}: {e}")
+                    print("Hi")
                     continue
 
         driver.quit()
-
+        if default_storage.exists(file_path):
+            default_storage.delete(file_path)
         pdf_files = [f for f in os.listdir(download_dir) if f.lower().endswith('.pdf')]
         # Zip all PDFs in the download_dir
         if not pdf_files:
@@ -92,6 +86,7 @@ def upload_csv(request):
         with open(zip_path, 'rb') as f:
             response = HttpResponse(f.read(), content_type='application/zip')
             response['Content-Disposition'] = 'attachment; filename=results.zip'
+            os.remove(zip_path)
             return response
 
     return render(request, 'scraper/upload.html')
