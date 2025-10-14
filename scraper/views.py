@@ -47,7 +47,7 @@ def upload_csv(request):
 
                     driver.get(download_link)
 
-                    wait = WebDriverWait(driver, 0.1)
+                    wait = WebDriverWait(driver, 0.01)
                     wait.until(EC.presence_of_element_located((By.ID, "regno"))).send_keys(regno)
                     driver.find_element(By.NAME, "dob").send_keys(dob)
                     print("1")
@@ -62,7 +62,7 @@ def upload_csv(request):
                     else:
                         print(f"Download failed or missing for {regno}")
                 except Exception as e:
-                    print("Hi")
+                    print(e)
                     continue
 
         driver.quit()
